@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/stationcontrol
+    username: stationcontrol
+    password: stationcontrol@25991
+  jpa:
+    show-sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format-sql: true
+        show-sql: true
+  messages:
+    always-use-message-format: false
+    basename: locale/messages
+    encoding: windows-1252
+    fallback-to-system-locale: false
+    use-code-as-default-message: false
+  web:
+    resources:
+      static-locations: file:storage
+  mvc:
+    static-path-pattern: /resources/**
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+  graphql:
+    graphiql:
+      enabled: true
+    schema:
+      printer:
+        enabled: true
+    cors:
+      allowed-origins: '*'
+      allowed-origin-patterns: "*"
+application:
+  jwt:
+    type: "Bearer "
+    access-token:
+      expiration: 86400000
+      secret: tP6zM3OAaa3DS3r1nceFf9qXRU5VCipl
+    refresh-token:
+      expiration: 604800000
+      secret: u3XVNGtJJ3DTX5jK3MHB5mRIIRRT3RM0
+    header-authorization: authorization
+  storage:
+   location: storage
