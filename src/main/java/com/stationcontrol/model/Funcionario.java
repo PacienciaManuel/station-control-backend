@@ -1,6 +1,7 @@
 package com.stationcontrol.model;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.Length;
@@ -17,15 +18,19 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import com.stationcontrol.model.converter.GeneroConverter;
 import com.stationcontrol.model.converter.PapelConverter;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -41,7 +46,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(Include.NON_NULL)
 @JsonClassDescription("funcionario")
-@EqualsAndHashCode(exclude = {"telefone"})
+@EqualsAndHashCode(exclude = {"telefones", "pais"})
 @JsonRootName(value = "funcionario", namespace = "funcionarios")
 @Table(
 	name = "funcionarios",
@@ -52,7 +57,7 @@ import lombok.NoArgsConstructor;
 	},
 	uniqueConstraints = @UniqueConstraint(name = "uk_funcionarios_email", columnNames = "email")
 )
-@JsonPropertyOrder({"id", "nome", "genero", "dataNascimento", "email", "morada", "papel", "dataCriacao", "fotoPerfil", "telefone", "notaInformativa"})
+@JsonPropertyOrder({"id", "nome", "genero", "dataNascimento", "email", "morada", "papel", "dataCriacao", "fotoPerfil", "pais", "telefones", "notaInformativa"})
 public class Funcionario {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -92,7 +97,11 @@ public class Funcionario {
 	@Column(name = "foto_perfil")
 	private String fotoPerfil;
 
-	@OneToOne(mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.EAGER)
-	private Telefone telefone;
+	@OneToMany(cascade = CascadeType.PERSIST, mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.EAGER)
+	private List<Telefone> telefones;
+	
+	@ManyToOne
+	@JoinColumn(name = "pais_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_usuarios_paises"))
+	private Pais pais;
 
 }

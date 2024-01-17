@@ -39,6 +39,10 @@ public abstract class AbstractServiceImpl<T, ID, R extends JpaRepository<T, ID>>
 		return repository.findAllById(ids);
 	}
 	
+	public List<T> findAll() {
+		return repository.findAll();
+	}
+	
 	public List<T> findAll(Example<T> example, String orderBy, Direction direction) {
 		return repository.findAll(example, Sort.by(direction, orderBy));
 	}

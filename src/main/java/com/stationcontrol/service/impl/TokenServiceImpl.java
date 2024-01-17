@@ -3,7 +3,7 @@ package com.stationcontrol.service.impl;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
-import com.stationcontrol.exception.JWTAuthenticationException;
+import com.stationcontrol.exception.UnauthorizedException;
 import com.stationcontrol.model.Funcionario;
 import com.stationcontrol.model.Token;
 import com.stationcontrol.repository.TokenRepository;
@@ -42,9 +42,9 @@ public class TokenServiceImpl extends AbstractServiceImpl<Token, String, TokenRe
 	@Override
 	public Token refresh(String authorization) {
 		if (!this.repository.existsByAtualizacaoAndValido(jwtService.extractToken(authorization), Boolean.TRUE)) {
-			throw new JWTAuthenticationException("Autorizaçao invalida.");
+			throw new UnauthorizedException(messageSource.getMessage("jwt.invalid.authorization", null, request.getLocale()));
 		}
-		return this.create(funcionarioService.findByEmail(jwtService.extractSubjectRefreshToken(authorization)));
+		return this.create(funcionarioService.findById(jwtService.extractSubjectRefreshToken(authorization)));
 	}
 	
 	@Override

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import com.stationcontrol.model.Papel;
 import com.stationcontrol.service.JWTService;
-import com.stationcontrol.service.impl.JWTServiceImpl.ClaimName;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -53,7 +52,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     		return;
 		}
     	try {
-    		SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(jwtService.extractSubjectAccessToken(authHeader), null, List.of(jwtService.extractClaim(authHeader, ClaimName.PAPEL, Papel.class))));
+    		SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(jwtService.extractSubjectAccessToken(authHeader), null, List.of(jwtService.extractClaimAccessToken(authHeader, "papel", Papel.class))));
     		chain.doFilter(request, response);
 		} catch (Exception e) {		
 			chain.doFilter(request, response);

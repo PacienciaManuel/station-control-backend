@@ -3,13 +3,14 @@ package com.stationcontrol.storage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -17,9 +18,18 @@ import lombok.extern.slf4j.Slf4j;
 public class FileSystemStorageService implements StorageService {
 
 	private final Path rootLocation;
+	
+	protected final HttpServletRequest request;
 
-	public FileSystemStorageService(@Value("${application.storage.location}") String storageLocation) {
-		this.rootLocation = Paths.get(storageLocation).toAbsolutePath();
+	protected final MessageSource messageSource;
+	
+
+	public FileSystemStorageService(@Value("${application.storage.location}") Path storageLocation, 
+			HttpServletRequest request, MessageSource messageSource) {
+		super();
+		this.rootLocation = storageLocation;
+		this.request = request;
+		this.messageSource = messageSource;
 	}
 
 	@Override
@@ -36,9 +46,9 @@ public class FileSystemStorageService implements StorageService {
 	@Override
 	public String store(MultipartFile file) {
 		String originalFilename = file.getOriginalFilename();
-		if (file.isEmpty()) throw new StorageException("Falha ao armazenar arquivo vazio: " + originalFilename);
-		if (originalFilename == null) throw new StorageException("Falha ao armazenar arquivo sem nome: " + originalFilename);
-		if (!originalFilename.contains(".")) throw new StorageException("Falha ao armazenar arquivo sem formato/extensão: " + originalFilename);
+		if (file.isEmpty()) throw new StorageException(messageSource.getMessage("storage.failed.empty-file", new String[] {originalFilename}, request.getLocale()));
+		if (originalFilename == null) throw new StorageException(messageSource.getMessage("storage.failed.unnamed-file", new String[] {originalFilename}, request.getLocale()));
+		if (!originalFilename.contains(".")) throw new StorageException(messageSource.getMessage("storage.failed.without-extension", new String[] {originalFilename}, request.getLocale()));
 		try {
 			String filename = new StringBuilder(UUID.randomUUID().toString())
 			.append("-")
@@ -48,7 +58,7 @@ public class FileSystemStorageService implements StorageService {
 			file.transferTo(rootLocation.resolve(filename));
 			return filename;
 		} catch (IOException e) {
-			throw new StorageException("Falha ao armazenar o arquivo: " + originalFilename, e);
+			throw new StorageException(messageSource.getMessage("storage.failed", new String[] {originalFilename}, request.getLocale()), e);
 		}
 	}
 

@@ -21,8 +21,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.stationcontrol.model.Papel;
-
 @Configuration
 @EnableWebSecurity(debug = true)
 @EnableMethodSecurity(securedEnabled = true)
@@ -43,8 +41,7 @@ public class SecurityConfig {
 		http.cors(AbstractHttpConfigurer::disable).csrf(AbstractHttpConfigurer::disable)
 		.authorizeHttpRequests(authorize -> authorize
 			.requestMatchers("/error").permitAll()
-			.requestMatchers(HttpMethod.POST, "/login", "/authentication").permitAll()
-			.requestMatchers("/funcionarios").hasAuthority(Papel.ADMINISTRADOR.getAuthority())
+			.requestMatchers(HttpMethod.POST, "/login", "/authentication/**").permitAll()
 			.anyRequest().authenticated()
 		)
 		.addFilter(authenticationFilter)

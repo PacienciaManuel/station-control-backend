@@ -11,8 +11,8 @@ import lombok.ToString;
 @ToString
 @RequiredArgsConstructor
 public enum Papel implements GrantedAuthority {
-	USUARIO("Usuario"), ADMINISTRADOR("Administrador");
-	
+	USUARIO("Usuário"), ADMINISTRADOR("Administrador");
+
 	@Getter
 	@JsonValue
 	private final String descricao;

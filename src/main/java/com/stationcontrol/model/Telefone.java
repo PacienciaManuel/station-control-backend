@@ -14,9 +14,11 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,10 +29,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "telefones")
 @JsonClassDescription("telefone")
 @JsonPropertyOrder({"id","numero"})
 @JsonRootName(value = "telefone", namespace = "telefones")
+@Table(
+		name = "telefones", 
+		indexes = @Index(name = "idx_telefones_funcionario_id", columnList = "funcionario_id"),
+		uniqueConstraints = @UniqueConstraint(name = "uk_telefones_numero_funcionario_id", columnNames = {"numero", "funcionario_id"})
+		)
 public class Telefone {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
