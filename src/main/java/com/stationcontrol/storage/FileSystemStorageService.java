@@ -68,7 +68,7 @@ public class FileSystemStorageService implements StorageService {
 			try {
 				Files.deleteIfExists(rootLocation.resolve(filename));
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				log.error(e.getMessage());
 			}
 		}
 	}

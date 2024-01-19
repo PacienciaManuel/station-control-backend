@@ -9,6 +9,8 @@ import org.springframework.data.domain.Sort.Direction;
 import com.stationcontrol.exception.DataNotFoundException;
 
 public interface AbstractService<T, ID> {
+	public Long count();
+	public Long count(Example<T> example);
 	public List<T> findAll();
 	public List<T> findAllById(Iterable<ID> ids);
 	public T findById(ID id) throws DataNotFoundException;

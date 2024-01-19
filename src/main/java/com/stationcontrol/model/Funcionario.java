@@ -29,6 +29,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -97,11 +98,18 @@ public class Funcionario {
 	@Column(name = "foto_perfil")
 	private String fotoPerfil;
 
-	@OneToMany(cascade = CascadeType.PERSIST, mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.EAGER)
+	@JoinTable(
+		name="telefones_funcionarios",
+		indexes = @Index(name = "idx_telefones_funcionarios_funcionario_id", columnList = "funcionario_id"),
+		uniqueConstraints = @UniqueConstraint(name = "uk_telefones_funcionarios_funcionario_id_telefone_id", columnNames = {"funcionario_id", "telefone_id"}),
+        joinColumns=@JoinColumn(name="funcionario_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_telefones_funcionarios_funcionario")),
+        inverseJoinColumns=@JoinColumn(name="telefone_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_telefones_funcionarios_telefone"))
+	)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Telefone> telefones;
 	
 	@ManyToOne
-	@JoinColumn(name = "pais_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_usuarios_paises"))
+	@JoinColumn(name = "pais_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_funcionarios_paises"))
 	private Pais pais;
 
 }

@@ -35,6 +35,16 @@ public abstract class AbstractServiceImpl<T, ID, R extends JpaRepository<T, ID>>
 	}
 	
 	@Override
+	public Long count() {
+		return repository.count();
+	}
+	
+	@Override
+	public Long count(Example<T> example) {
+		return repository.count(example);
+	}
+	
+	@Override
 	public List<T> findAllById(Iterable<ID> ids) {
 		return repository.findAllById(ids);
 	}

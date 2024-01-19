@@ -1,7 +1,6 @@
 package com.stationcontrol.service.impl;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,12 +14,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.stationcontrol.dto.SenhaDTO;
 import com.stationcontrol.dto.UpdateEmailDTO;
 import com.stationcontrol.exception.DataNotFoundException;
+import com.stationcontrol.exception.IntegrityException;
 import com.stationcontrol.exception.UnauthorizedException;
 import com.stationcontrol.model.Funcionario;
 import com.stationcontrol.model.Pais;
 import com.stationcontrol.model.Telefone;
 import com.stationcontrol.repository.FuncionarioRepository;
-import com.stationcontrol.repository.TelefoneRepository;
 import com.stationcontrol.service.AbstractService;
 import com.stationcontrol.service.FuncionarioService;
 import com.stationcontrol.storage.StorageService;
@@ -33,19 +32,16 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 	private final PasswordEncoder encoder;
 
 	private final StorageService storageService;
-
-	private final TelefoneRepository telefoneRepository;
 	
 	private final AbstractService<Pais, UUID> paisService;
 	
 
 	public FuncionarioServiceImpl(FuncionarioRepository repository, HttpServletRequest request,
 			MessageSource messageSource, PasswordEncoder encoder, StorageService storageService,
-			TelefoneRepository telefoneRepository, AbstractService<Pais, UUID> paisService) {
+			AbstractService<Pais, UUID> paisService) {
 		super(repository, request, messageSource);
 		this.encoder = encoder;
 		this.storageService = storageService;
-		this.telefoneRepository = telefoneRepository;
 		this.paisService = paisService;
 	}
 
@@ -57,7 +53,6 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 	
 	@Override
 	public Funcionario create(UUID idPais, Funcionario funcionario, Telefone telefone, Optional<MultipartFile> fotoPerfil) {
-		telefone.setFuncionario(funcionario);
 		funcionario.setTelefones(List.of(telefone));
 		funcionario.setPais(paisService.findById(idPais));
 		funcionario.setSenha(encoder.encode(funcionario.getSenha()));
@@ -68,7 +63,7 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 			return super.save(funcionario);
 		} catch (DataIntegrityViolationException e) {
 			storageService.delete(funcionario.getFotoPerfil());
-			throw new UnauthorizedException(messageSource.getMessage("employee.email.already-exists", new String[]{funcionario.getEmail()}, request.getLocale()));
+			throw new IntegrityException(messageSource.getMessage("employee.email.already-exists", new String[]{funcionario.getEmail()}, request.getLocale()));
 		}
 	}
 	
@@ -76,17 +71,15 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 	public List<Funcionario> create(List<Funcionario> funcionarios) {
 		var paises = paisService.findAll();
 		SecureRandom random = new SecureRandom();
-		List<Telefone> telefones = new ArrayList<>(funcionarios.size());
-		var entitys = super.save(funcionarios.stream().map(funcionario -> {
+		funcionarios = funcionarios.stream().map(funcionario -> {
 			funcionario.setSenha(encoder.encode(funcionario.getSenha()));
 			funcionario.setPais(paises.get(random.nextInt(paises.size() - 1)));
 			return funcionario;
-		}).toList());
-		for (Funcionario funcionario : entitys) {
-			telefones.addAll(funcionario.getTelefones());
+		}).toList();
+		for (Funcionario funcionario : funcionarios) {
+			super.save(funcionario);
 		}
-		telefoneRepository.saveAll(telefones);
-		return entitys;
+		return funcionarios;
 	}
 	
 	@Override

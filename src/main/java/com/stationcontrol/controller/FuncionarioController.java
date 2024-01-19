@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/funcionarios")
-public class FuncionarioController extends BaseController<Funcionario> {
+public class FuncionarioController extends BaseController {
 	private final FuncionarioService funcionarioService;
 	
 	@GetMapping
@@ -108,6 +108,11 @@ public class FuncionarioController extends BaseController<Funcionario> {
 		));
 	}
 	
+	@GetMapping("/count")
+	public ResponseEntity<Long> count(@RequestParam Papel papel) {
+		return super.ok(funcionarioService.count(Example.of(Funcionario.builder().papel(papel).build())));
+	}
+	
 	@PostMapping("/{idPais}")
 	@Secured("Administrador")
 	public ResponseEntity<Funcionario> create(@PathVariable UUID idPais, @Valid FuncionarioDTO funcionarioDTO, @RequestParam Optional<MultipartFile> fotoPerfil) {
@@ -122,7 +127,7 @@ public class FuncionarioController extends BaseController<Funcionario> {
 		return super.created(funcionarioService.create(funcionariosDTO.stream().map(funcionarioDTO -> {
 			Funcionario funcionario = Funcionario.builder().build();
 			BeanUtils.copyProperties(funcionarioDTO, funcionario);
-			funcionario.setTelefones(List.of(Telefone.builder().numero(funcionarioDTO.getNumero()).funcionario(funcionario).build()));
+			funcionario.setTelefones(List.of(Telefone.builder().numero(funcionarioDTO.getNumero()).build()));
 			return funcionario;
 		}).toList()));
 	}
