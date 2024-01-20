@@ -40,6 +40,6 @@ public class FuncionarioDTO extends TelefoneDTO {
 	@Size(min = 8, max = 16, message = "{FuncionarioDTO.senha.size}")
 	private String senha;
 
-	@NotBlank(message = "{FuncionarioDTO.notaInformativa.notblank}")
-	private String notaInformativa;
+	@NotBlank(message = "{FuncionarioDTO.biografia.notblank}")
+	private String biografia;
 }

@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,7 +59,7 @@ import lombok.NoArgsConstructor;
 	},
 	uniqueConstraints = @UniqueConstraint(name = "uk_funcionarios_email", columnNames = "email")
 )
-@JsonPropertyOrder({"id", "nome", "genero", "dataNascimento", "email", "morada", "papel", "dataCriacao", "fotoPerfil", "pais", "telefones", "notaInformativa"})
+@JsonPropertyOrder({"id", "nome", "genero", "dataNascimento", "email", "morada", "papel", "dataCriacao", "fotoPerfil", "pais", "telefones", "biografia"})
 public class Funcionario {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -88,8 +89,8 @@ public class Funcionario {
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private String senha;
 
-	@Column(name = "nota_informativa", length = Length.LONG32, nullable = false)
-	private String notaInformativa;
+	@Column(name = "biografia", length = Length.LONG32, nullable = false)
+	private String biografia;
 
 	@CreationTimestamp(source = SourceType.DB)
 	@Column(name = "data_criacao", nullable = false, updatable = false)
@@ -97,6 +98,10 @@ public class Funcionario {
 
 	@Column(name = "foto_perfil")
 	private String fotoPerfil;
+	
+	@ManyToOne
+	@JoinColumn(name = "pais_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_funcionarios_paises"))
+	private Pais pais;
 
 	@JoinTable(
 		name="telefones_funcionarios",
@@ -108,8 +113,8 @@ public class Funcionario {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Telefone> telefones;
 	
-	@ManyToOne
-	@JoinColumn(name = "pais_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_funcionarios_paises"))
-	private Pais pais;
+	@JsonIgnore
+	@OneToMany(mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Ocorrencia> ocorrencias;
 
 }

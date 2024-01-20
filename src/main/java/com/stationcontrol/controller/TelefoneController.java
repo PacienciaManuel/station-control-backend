@@ -3,7 +3,6 @@ package com.stationcontrol.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,20 +26,28 @@ import lombok.RequiredArgsConstructor;
 public class TelefoneController extends BaseController {
 	private final TelefoneService telefoneService;
 	
-	@GetMapping("/{idFuncionaro}")
-	public ResponseEntity<List<Telefone>> findAllByFuncionario(@PathVariable UUID idFuncionaro) {
-		return this.ok(telefoneService.findAllByFuncionario(idFuncionaro));
+	@GetMapping("/{idFuncionario}")
+	public ResponseEntity<List<Telefone>> findAllByFuncionario(@PathVariable UUID idFuncionario) {
+		return this.ok(telefoneService.findAllByFuncionario(idFuncionario));
 	}
 	
-	@PostMapping("/{idFuncionaro}")
-	public ResponseEntity<Telefone> createByFuncionario(@PathVariable UUID idFuncionaro, @RequestBody @Valid TelefoneDTO telefoneDTO) {
-		var telefone = Telefone.builder().build();
-		BeanUtils.copyProperties(telefoneDTO, telefone);
-		return this.ok(telefoneService.createByFuncionario(idFuncionaro, telefone));
+	@GetMapping("/requerente/{idRequerente}")
+	public ResponseEntity<Telefone> findByRequerente(@PathVariable UUID idRequerente) {
+		return this.ok(telefoneService.findByRequerente(idRequerente));
 	}
 	
-	@DeleteMapping("/{idFuncionaro}/{idTelefone}")
-	public ResponseEntity<Telefone> deleteByFuncionario(@PathVariable UUID idFuncionaro, @PathVariable UUID idTelefone) {
-		return this.ok(telefoneService.deleteByFuncionario(idFuncionaro, idTelefone));
+	@GetMapping("/contador")
+	public ResponseEntity<Long> count() {
+		return this.ok(telefoneService.count());
+	}
+	
+	@PostMapping("/funcionario/{idFuncionario}")
+	public ResponseEntity<Telefone> createByFuncionario(@PathVariable UUID idFuncionario, @RequestBody @Valid TelefoneDTO telefoneDTO) {
+		return this.ok(telefoneService.createByFuncionario(idFuncionario, Telefone.builder().numero(telefoneDTO.getNumero()).build()));
+	}
+	
+	@DeleteMapping("/funcionario/{idFuncionario}/{idTelefone}")
+	public ResponseEntity<Telefone> deleteByFuncionario(@PathVariable UUID idFuncionario, @PathVariable UUID idTelefone) {
+		return this.ok(telefoneService.deleteByFuncionario(idFuncionario, idTelefone));
 	}
 }

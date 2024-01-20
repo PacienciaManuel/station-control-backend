@@ -11,19 +11,19 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class FuncionarioUpdateDTO {
-	@NotBlank(message = "{FuncionarioDTO.nome.notblank}")
+public class RequerenteUpdateDTO {
+	@NotBlank(message = "{RequerenteDTO.nome.notblank}")
 	private String nome;
 
-	@NotNull(message = "{FuncionarioDTO.genero.notnull}")
+	@NotNull(message = "{RequerenteDTO.genero.notnull}")
 	private Genero genero;
 	
-	@NotNull(message = "{FuncionarioDTO.dataNascimento.notnull}")
+	@NotNull(message = "{RequerenteDTO.dataNascimento.notnull}")
 	private LocalDate dataNascimento;
 
-	@NotBlank(message = "{FuncionarioDTO.morada.notblank}")
+	@NotBlank(message = "{RequerenteDTO.bilheteIdentidade.notblank}")
 	private String morada;
-
-	@NotBlank(message = "{FuncionarioDTO.biografia.notblank}")
-	private String biografia;
+	
+	@NotBlank(message = "{RequerenteDTO.bilheteIdentidade.notblank}")
+	private String bilheteIdentidade;
 }

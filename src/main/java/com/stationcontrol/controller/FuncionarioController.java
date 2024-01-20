@@ -108,8 +108,8 @@ public class FuncionarioController extends BaseController {
 		));
 	}
 	
-	@GetMapping("/count")
-	public ResponseEntity<Long> count(@RequestParam Papel papel) {
+	@GetMapping("/contador")
+	public ResponseEntity<Long> count(@RequestParam(required = false) Papel papel) {
 		return super.ok(funcionarioService.count(Example.of(Funcionario.builder().papel(papel).build())));
 	}
 	

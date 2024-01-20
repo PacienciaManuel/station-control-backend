@@ -8,6 +8,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,7 +61,8 @@ public class PaisController extends BaseController {
 	public ResponseEntity<Pais> update(@PathVariable UUID idPais, @RequestBody @Valid Pais pai) {
 		return super.ok(abstractService.update(idPais, pai, "id"));
 	}
-	
+
+	@Secured("Administrador")
 	@DeleteMapping("/{idPais}")
 	public ResponseEntity<Pais> delete(@PathVariable UUID idPais) {
 		return super.ok(abstractService.delete(idPais));

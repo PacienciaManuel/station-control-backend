@@ -57,7 +57,7 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 		funcionario.setPais(paisService.findById(idPais));
 		funcionario.setSenha(encoder.encode(funcionario.getSenha()));
 		if (fotoPerfil.isPresent()) {
-			funcionario.setFotoPerfil(storageService.store(fotoPerfil.get()));
+			funcionario.setFotoPerfil(storageService.store(fotoPerfil.get()).getUrl());
 		}
 		try {			
 			return super.save(funcionario);
@@ -89,7 +89,7 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 		entity.setGenero(funcionario.getGenero());
 		entity.setDataNascimento(funcionario.getDataNascimento());
 		entity.setMorada(funcionario.getMorada());
-		entity.setNotaInformativa(funcionario.getNotaInformativa());
+		entity.setBiografia(funcionario.getBiografia());
 		return super.save(entity);
 	}
 	
@@ -123,9 +123,9 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 	@Override
 	public Funcionario updateProfilePhoto(UUID idFuncionario, MultipartFile fotoPerfil) {
 		var entity = this.findById(idFuncionario);
-		String filename = storageService.store(fotoPerfil);
+		var arquivo = storageService.store(fotoPerfil);
 		storageService.delete(entity.getFotoPerfil());
-		entity.setFotoPerfil(filename);
+		entity.setFotoPerfil(arquivo.getUrl());
 		return super.save(entity);
 	}
 	
