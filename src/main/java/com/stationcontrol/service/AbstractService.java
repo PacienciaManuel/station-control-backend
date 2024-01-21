@@ -19,5 +19,6 @@ public interface AbstractService<T, ID> {
 	public T save(T data);
 	public List<T> save(List<T> datas);
 	public T update(ID id, T data, String ... ignoreProperties);
-	public T delete(ID id);
+	public T deleteById(ID id);
+	public T delete(T entity);
 }

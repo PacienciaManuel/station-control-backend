@@ -45,7 +45,6 @@ public class FuncionarioController extends BaseController {
 	private final FuncionarioService funcionarioService;
 	
 	@GetMapping
-	@Secured("Administrador")
 	public ResponseEntity<List<Funcionario>> findAll(
 			@RequestParam(required = false) UUID pais,
 			@RequestParam(required = false) String nome, 
@@ -78,6 +77,11 @@ public class FuncionarioController extends BaseController {
 		return super.ok(funcionarioService.findById(idFuncionario));
 	}
 	
+	@GetMapping("/contador")
+	public ResponseEntity<Long> count(@RequestParam(required = false) Papel papel) {
+		return super.ok(funcionarioService.count(Example.of(Funcionario.builder().papel(papel).build())));
+	}
+	
 	@GetMapping("/paginacao")
 	public ResponseEntity<Page<Funcionario>> pagination(
 			@RequestParam int page, @RequestParam int size,
@@ -108,11 +112,6 @@ public class FuncionarioController extends BaseController {
 		));
 	}
 	
-	@GetMapping("/contador")
-	public ResponseEntity<Long> count(@RequestParam(required = false) Papel papel) {
-		return super.ok(funcionarioService.count(Example.of(Funcionario.builder().papel(papel).build())));
-	}
-	
 	@PostMapping("/{idPais}")
 	@Secured("Administrador")
 	public ResponseEntity<Funcionario> create(@PathVariable UUID idPais, @Valid FuncionarioDTO funcionarioDTO, @RequestParam Optional<MultipartFile> fotoPerfil) {
@@ -132,21 +131,16 @@ public class FuncionarioController extends BaseController {
 		}).toList()));
 	}
 	
-	@PutMapping("/{idFuncionario}")
-	public ResponseEntity<Funcionario>  update(@PathVariable UUID idFuncionario, @RequestBody @Valid FuncionarioUpdateDTO funcionarioUpdateDTO) {
+	@PutMapping("/{idFuncionario}/{idPais}")
+	public ResponseEntity<Funcionario>  update(@PathVariable UUID idFuncionario, @PathVariable UUID idPais, @RequestBody @Valid FuncionarioUpdateDTO funcionarioUpdateDTO) {
 		var funcionario = Funcionario.builder().build();
 		BeanUtils.copyProperties(funcionarioUpdateDTO, funcionario);
-		return super.ok(funcionarioService.update(idFuncionario, funcionario));
+		return super.ok(funcionarioService.update(idFuncionario, idPais, funcionario));
 	}
 	
 	@PatchMapping("/email/{idFuncionario}")
 	public ResponseEntity<Funcionario> updateEmail(@PathVariable UUID idFuncionario, @RequestBody @Valid UpdateEmailDTO updateEmailDTO) {
 		return super.ok(funcionarioService.updateEmail(idFuncionario, updateEmailDTO));
-	}
-	
-	@PatchMapping("/pais/{idFuncionario}/{idPais}")
-	public ResponseEntity<Funcionario> updateCountry(@PathVariable UUID idFuncionario, @PathVariable UUID idPais) {
-		return super.ok(funcionarioService.updateCountry(idFuncionario, idPais));
 	}
 	
 	@PatchMapping("/fotoPerfil/{idFuncionario}")
@@ -157,6 +151,6 @@ public class FuncionarioController extends BaseController {
 	@Secured("Administrador")
 	@DeleteMapping("/{idFuncionario}")
 	public ResponseEntity<Funcionario>  delete(@PathVariable UUID idFuncionario) {
-		return super.ok(funcionarioService.delete(idFuncionario));
+		return super.ok(funcionarioService.deleteById(idFuncionario));
 	}
 }

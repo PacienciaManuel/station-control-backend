@@ -11,13 +11,13 @@ import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRootName;
-import com.stationcontrol.model.converter.PapelConverter;
+import com.stationcontrol.model.converter.StatusConverter;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -53,29 +53,34 @@ import lombok.NoArgsConstructor;
 	indexes = @Index(name = "idx_ocorrencias_funcionario_id", columnList = "funcionario_id")
 )
 @JsonInclude(Include.NON_NULL)
-@JsonPropertyOrder({"id", "status", "totalObjectos", "totalCrimes", "totalSuspeitos", "dataOcorrencia", "dataCriacao", "dataAtualizacao", "descricao", "funcionario", "requerente", "objectos", "crimes", "suspeitos"})
+@JsonPropertyOrder({"id", "status", "local", "totalArquivos", "totalObjectos", "totalCrimes", "totalSuspeitos", "dataOcorrencia", "dataCriacao", "dataAtualizacao", "descricao", "funcionario", "requerente"})
 public class Ocorrencia {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
 	@Column(nullable = false)
-	@Convert(converter = PapelConverter.class)
+	@Convert(converter = StatusConverter.class)
 	private Status status;
 	
 	@Column(name = "descricao", length = Length.LONG32, nullable = false)
 	private String descricao;
+	
+	private String local;
 
 	@Column(name = "data_ocorrencia", nullable = false)
 	private LocalDateTime dataOcorrencia;
 
 	@CreationTimestamp(source = SourceType.DB)
 	@Column(name = "data_criacao", nullable = false, updatable = false)
-	private String dataCriacao;
+	private LocalDateTime dataCriacao;
 
 	@UpdateTimestamp(source = SourceType.DB)
 	@Column(name = "data_atualizacao", insertable = false)
-	private String dataAtualizacao;
+	private LocalDateTime dataAtualizacao;
+
+	@Formula("(SELECT COUNT(a.ocorrencia_id) FROM ocorrencias o LEFT JOIN arquivos a ON (a.ocorrencia_id=o.id) WHERE o.id=id GROUP BY o.id)")
+	private Long totalArquivos;
 	
 	@Formula("(SELECT COUNT(obj.ocorrencia_id) FROM ocorrencias o LEFT JOIN objectos obj ON (obj.ocorrencia_id=o.id) WHERE o.id=id GROUP BY o.id)")
 	private Long totalObjectos;
@@ -85,22 +90,6 @@ public class Ocorrencia {
 
 	@Formula("(SELECT COUNT(s.ocorrencia_id) FROM ocorrencias o LEFT JOIN suspeitos_ocorrencias s ON (s.ocorrencia_id=o.id) WHERE o.id=id GROUP BY o.id)")
 	private Long totalSuspeitos;
-	
-//	@JsonIgnore
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "ocorrencia", orphanRemoval = true, fetch = FetchType.EAGER)
-	private List<Arquivo> arquivos;
-	
-	@CollectionTable(
-		name = "objectos", 
-		indexes = @Index(name = "idx_objectos_ocorrencia_id", columnList = "ocorrencia_id"), 
-		uniqueConstraints = @UniqueConstraint(name = "uk_objectos_ocorrencia_id", columnNames = {"objecto", "ocorrencia_id"}),
-		joinColumns = @JoinColumn(name = "ocorrencia_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_objectos_ocorrencias"))
-	)
-//	@JsonIgnore
-	@OrderBy("objecto asc")
-	@Column(name = "objecto", nullable = false)
-	@ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
-	private List<String> objectos;
 
 	@ManyToOne
 	@JoinColumn(name = "requerente_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_ocorrencias_requerentes"))
@@ -109,6 +98,22 @@ public class Ocorrencia {
 	@ManyToOne
 	@JoinColumn(name = "funcionario_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_ocorrencias_funcionarios"))
 	private Funcionario funcionario;
+	
+	@JsonIgnore
+	@OneToMany(mappedBy = "ocorrencia", orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Arquivo> arquivos;
+	
+	@CollectionTable(
+		name = "objectos", 
+		indexes = @Index(name = "idx_objectos_ocorrencia_id", columnList = "ocorrencia_id"), 
+		uniqueConstraints = @UniqueConstraint(name = "uk_objectos_ocorrencia_id", columnNames = {"objecto", "ocorrencia_id"}),
+		joinColumns = @JoinColumn(name = "ocorrencia_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_objectos_ocorrencias"))
+	)
+	@JsonIgnore
+	@OrderBy("objecto asc")
+	@Column(name = "objecto", nullable = false)
+	@ElementCollection(targetClass = String.class, fetch = FetchType.LAZY)
+	private List<String> objectos;
 
 	@JoinTable(
 		name="crimes_ocorrencias",
@@ -117,18 +122,11 @@ public class Ocorrencia {
         joinColumns=@JoinColumn(name="ocorrencia_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_crimes_ocorrencias_ocorrencia")),
         inverseJoinColumns=@JoinColumn(name="crime_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_crimes_ocorrencias_crime"))
 	)
-//	@JsonIgnore
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+	@JsonIgnore
+	@OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Crime> crimes;
 
-	@JoinTable(
-		name="suspeitos_ocorrencias",
-		indexes = @Index(name = "idx_suspeitos_ocorrencias_ocorrencia_id", columnList = "ocorrencia_id"),
-		uniqueConstraints = @UniqueConstraint(name = "uk_suspeitos_ocorrencias_ocorrencia_id_suspeito_id", columnNames = {"ocorrencia_id", "suspeito_id"}),
-        joinColumns=@JoinColumn(name="ocorrencia_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_suspeitos_ocorrencias_ocorrencia")),
-        inverseJoinColumns=@JoinColumn(name="suspeito_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_suspeitos_ocorrencias_suspeito"))
-	)
-//	@JsonIgnore
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-	private List<Suspeito> suspeitos;
+	@JsonIgnore
+	@OneToMany(mappedBy = "ocorrencia", orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<SuspeitoOcorrencia> suspeitosOcorrencia;
 }

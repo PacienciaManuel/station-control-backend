@@ -77,7 +77,13 @@ public abstract class AbstractServiceImpl<T, ID, R extends JpaRepository<T, ID>>
 		return this.save(entity);
 	}
 	
-	public T delete(ID id) {
+	@Override
+	public T delete(T entity) {
+		this.repository.delete(entity);
+		return entity;
+	}
+	
+	public T deleteById(ID id) {
 		T entity = this.findById(id);
 		repository.deleteById(id);
 		return entity;

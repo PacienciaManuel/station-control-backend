@@ -1,12 +1,15 @@
 package com.stationcontrol.service.impl;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
 import com.stationcontrol.exception.BadRequestException;
+import com.stationcontrol.model.Funcionario;
 import com.stationcontrol.model.NotificacaoFuncionario;
 import com.stationcontrol.repository.NotificacaoFuncionarioRepository;
 import com.stationcontrol.service.FuncionarioService;
@@ -29,7 +32,21 @@ public class NotificacaoFuncionarioServiceImpl extends AbstractServiceImpl<Notif
 	public NotificacaoFuncionario create(UUID idFuncionario, UUID idFuncionarioDestino, NotificacaoFuncionario notificacaoFuncionario) throws BadRequestException{
 		notificacaoFuncionario.setFuncionario(funcionarioService.findById(idFuncionario));
 		notificacaoFuncionario.setFuncionarioDestino(funcionarioService.findById(idFuncionarioDestino));
+		notificacaoFuncionario.setVisto(Boolean.FALSE);
 		return super.save(notificacaoFuncionario);
+	}
+	
+	@Override
+	public List<NotificacaoFuncionario> create(List<NotificacaoFuncionario> notificacoesFuncionarios) {
+		SecureRandom random = new SecureRandom();
+		List<Funcionario> funcionarios = funcionarioService.findAll();
+		return super.save(notificacoesFuncionarios.stream().map(notificacao -> {
+			notificacao.setFuncionario(funcionarios.get(random.nextInt(funcionarios.size() - 1)));
+			notificacao.setFuncionarioDestino(funcionarios.get(random.nextInt(funcionarios.size() - 1)));
+			notificacao.setVisto(random.nextBoolean());
+			notificacao.setDataVisto(Boolean.TRUE.equals(notificacao.getVisto()) ? LocalDateTime.now() : null);
+			return notificacao;
+		}).toList());
 	}
 	
 	@Override

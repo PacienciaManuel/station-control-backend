@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
@@ -24,9 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.stationcontrol.dto.SuspeitoDTO;
+import com.stationcontrol.dto.SuspeitoUpdateDTO;
+import com.stationcontrol.model.Funcionario;
 import com.stationcontrol.model.Genero;
 import com.stationcontrol.model.Pais;
 import com.stationcontrol.model.Suspeito;
+import com.stationcontrol.model.Telefone;
 import com.stationcontrol.service.SuspeitoService;
 import com.stationcontrol.util.BaseController;
 
@@ -40,12 +44,12 @@ public class SuspeitoController extends BaseController {
 	private final SuspeitoService suspeitoService;
 	
 	@GetMapping
-	@Secured("Administrador")
 	public ResponseEntity<List<Suspeito>> findAll(
 			@RequestParam(required = false) UUID pais,
 			@RequestParam(required = false) String nome, 
 			@RequestParam(required = false) Genero genero, 
 			@RequestParam(required = false) Boolean detido, 
+			@RequestParam(required = false) UUID funcionario,
 			@RequestParam(required = false) LocalDate dataNascimento, 
 			@RequestParam(defaultValue = "nome") String orderBy, 
 			@RequestParam(defaultValue = "ASC") Direction direction) {
@@ -57,6 +61,7 @@ public class SuspeitoController extends BaseController {
 				.detido(detido)
 				.dataNascimento(dataNascimento)
 				.pais(Pais.builder().id(pais).build())
+				.funcionario(Funcionario.builder().id(funcionario).build())
 				.build(),
 				ExampleMatcher.matching()
 				.withMatcher("nome", matcher -> matcher.contains().ignoreCase())
@@ -70,6 +75,21 @@ public class SuspeitoController extends BaseController {
 		return super.ok(suspeitoService.findById(idSuspeito));
 	}
 	
+	@GetMapping("/contador")
+	public ResponseEntity<Long> count(
+			@RequestParam(required = false) UUID pais,
+			@RequestParam(required = false) Genero genero,
+			@RequestParam(required = false) UUID funcionario,
+			@RequestParam(required = false) Boolean detido) {
+		return super.ok(suspeitoService.count(Example.of(
+		Suspeito.builder()
+		.detido(detido)
+		.genero(genero)
+		.pais(Pais.builder().id(pais).build())
+		.funcionario(Funcionario.builder().id(funcionario).build())
+		.build())));
+	}
+	
 	@GetMapping("/paginacao")
 	public ResponseEntity<Page<Suspeito>> pagination(
 			@RequestParam int page, @RequestParam int size,
@@ -77,6 +97,7 @@ public class SuspeitoController extends BaseController {
 			@RequestParam(required = false) String nome, 
 			@RequestParam(required = false) Genero genero, 
 			@RequestParam(required = false) Boolean detido, 
+			@RequestParam(required = false) UUID funcionario,
 			@RequestParam(required = false) LocalDate dataNascimento, 
 			@RequestParam(defaultValue = "nome") String orderBy, 
 			@RequestParam(defaultValue = "ASC") Direction direction) {
@@ -89,6 +110,7 @@ public class SuspeitoController extends BaseController {
 				.detido(detido)
 				.dataNascimento(dataNascimento)
 				.pais(Pais.builder().id(pais).build())
+				.funcionario(Funcionario.builder().id(funcionario).build())
 				.build(),
 				ExampleMatcher.matching()
 				.withMatcher("nome", matcher -> matcher.contains().ignoreCase())
@@ -97,61 +119,30 @@ public class SuspeitoController extends BaseController {
 		));
 	}
 	
-	@GetMapping("/contador")
-	public ResponseEntity<Long> count(
-			@RequestParam(required = false) UUID pais,
-			@RequestParam(required = false) Genero genero,
-			@RequestParam(required = false) Boolean detido) {
-		return super.ok(suspeitoService.count(Example.of(
-		Suspeito.builder()
-		.detido(detido)
-		.genero(genero)
-		.pais(Pais.builder().id(pais).build())
-		.build())));
-	}
-	
-	@PostMapping("/{idPais}")
-	public ResponseEntity<Suspeito> create(@PathVariable UUID idPais, @Valid SuspeitoDTO suspeitoDTO, @RequestParam Optional<MultipartFile> foto) {
-		return super.created(suspeitoService.create(
-		idPais, 
-		Suspeito.builder()
-		.nome(suspeitoDTO.getNome())
-		.genero(suspeitoDTO.getGenero())
-		.detido(suspeitoDTO.getDetido())
-		.biografia(suspeitoDTO.getBiografia())
-		.dataNascimento(suspeitoDTO.getDataNascimento())
-		.bilheteIdentidade(suspeitoDTO.getBilheteIdentidade())
-		.build(), 
-		foto));
+	@PostMapping("/{idFuncionario}/{idPais}")
+	public ResponseEntity<Suspeito> create(@PathVariable UUID idFuncionario, @PathVariable UUID idPais, @Valid SuspeitoDTO suspeitoDTO, @RequestParam Optional<MultipartFile> foto) {
+		Suspeito suspeito = Suspeito.builder().build();
+		BeanUtils.copyProperties(suspeitoDTO, suspeito);
+		if (suspeitoDTO.getNumero() != null) {
+			suspeito.setTelefone(Telefone.builder().numero(suspeitoDTO.getNumero()).build());
+		}
+		return super.created(suspeitoService.create(idFuncionario, idPais, suspeito, foto));
 	}
 	
 	@PostMapping("/lista")
-	@Secured("Administrador")
 	public ResponseEntity<List<Suspeito>> create(@RequestBody @Valid List<SuspeitoDTO> suspeitosDTO) {
-		return super.created(suspeitoService.create(suspeitosDTO.stream().map(suspeitoDTO -> Suspeito.builder()
-		.nome(suspeitoDTO.getNome())
-		.genero(suspeitoDTO.getGenero())
-		.detido(suspeitoDTO.getDetido())
-		.biografia(suspeitoDTO.getBiografia())
-		.dataNascimento(suspeitoDTO.getDataNascimento())
-		.bilheteIdentidade(suspeitoDTO.getBilheteIdentidade())
-		.build()).toList()));
+		return super.created(suspeitoService.create(suspeitosDTO.stream().map(suspeitoDTO -> {
+			Suspeito suspeito = Suspeito.builder().build();
+			BeanUtils.copyProperties(suspeitoDTO, suspeito);
+			return suspeito;
+		}).toList()));
 	}
 	
 	@PutMapping("/{idSuspeito}/{idPais}")
-	public ResponseEntity<Suspeito>  update(@PathVariable UUID idSuspeito, @PathVariable UUID idPais, @RequestBody @Valid SuspeitoDTO suspeitoDTO) {
-		return super.ok(suspeitoService.update(
-			idSuspeito, 
-			idPais, 
-			Suspeito.builder()
-			.nome(suspeitoDTO.getNome())
-			.genero(suspeitoDTO.getGenero())
-			.detido(suspeitoDTO.getDetido())
-			.biografia(suspeitoDTO.getBiografia())
-			.dataNascimento(suspeitoDTO.getDataNascimento())
-			.bilheteIdentidade(suspeitoDTO.getBilheteIdentidade())
-			.build()
-		));
+	public ResponseEntity<Suspeito>  update(@PathVariable UUID idSuspeito, @PathVariable UUID idPais, @RequestBody @Valid SuspeitoUpdateDTO suspeitoUpdateDTO) {
+		Suspeito suspeito = Suspeito.builder().build();
+		BeanUtils.copyProperties(suspeitoUpdateDTO, suspeito);
+		return super.ok(suspeitoService.update(idSuspeito, idPais, suspeito));
 	}
 	
 	@PatchMapping("/foto/{idSuspeito}")
@@ -162,6 +153,6 @@ public class SuspeitoController extends BaseController {
 	@Secured("Administrador")
 	@DeleteMapping("/{idSuspeito}")
 	public ResponseEntity<Suspeito>  delete(@PathVariable UUID idSuspeito) {
-		return super.ok(suspeitoService.delete(idSuspeito));
+		return super.ok(suspeitoService.deleteById(idSuspeito));
 	}
 }

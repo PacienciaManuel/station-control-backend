@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +24,7 @@ public class ArquivoServiceImpl extends AbstractServiceImpl<Arquivo, UUID, Arqui
 	private final StorageService storageService;
 	private final OcorrenciaService ocorrenciaService;
 
+
 	public ArquivoServiceImpl(ArquivoRepository repository, HttpServletRequest request, MessageSource messageSource,
 			StorageService storageService, OcorrenciaService ocorrenciaService) {
 		super(repository, request, messageSource);
@@ -29,18 +33,38 @@ public class ArquivoServiceImpl extends AbstractServiceImpl<Arquivo, UUID, Arqui
 	}
 
 	@Override
-	public List<Arquivo> create(UUID idOcorrencia, MultipartFile[] multipartFiles) {
+	public List<Arquivo> findByOcorrencia(Ocorrencia ocorrencia) {
+		return super.repository.findByOcorrencia(Ocorrencia.builder().id(null).build());
+	}
+
+	@Override
+	public Page<Arquivo> findByOcorrencia(int page, int size, Ocorrencia ocorrencia, String orderBy,
+			Direction direction) {
+		return super.repository.findByOcorrencia(Ocorrencia.builder().id(null).build(), PageRequest.of(page, size, direction, orderBy));
+	}
+
+	@Override
+	public Arquivo create(UUID idOcorrencia, MultipartFile file) {
 		Ocorrencia ocorrencia = ocorrenciaService.findById(idOcorrencia);
-		return super.save(storageService.store(multipartFiles).stream().map(arquivo -> {
+		Arquivo arquivo = storageService.store(file);
+		arquivo.setOcorrencia(ocorrencia);
+		return super.save(arquivo);
+	}
+
+	@Override
+	public List<Arquivo> create(UUID idOcorrencia, MultipartFile[] arquivos) {
+		Ocorrencia ocorrencia = ocorrenciaService.findById(idOcorrencia);
+		return super.save(storageService.store(arquivos).stream().map(arquivo -> {
 			arquivo.setOcorrencia(ocorrencia);
 			return arquivo;
 		}).toList());
 	}
-	
+
 	@Override
-	public Arquivo delete(UUID id) {
-		Arquivo entity = super.findById(id);
-		storageService.delete(entity.getUrl());
-		return entity;
+	public Arquivo deleteById(UUID idArquivo) {
+		Arquivo arquivo = super.deleteById(idArquivo);
+		storageService.delete(arquivo.getUrl());
+		return arquivo;
 	}
+	
 }

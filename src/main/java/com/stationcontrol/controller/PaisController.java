@@ -38,7 +38,7 @@ public class PaisController extends BaseController {
 	}
 	
 	@GetMapping("/{idPais}")
-	public ResponseEntity<Pais> findCountryById(@PathVariable UUID idPais) {
+	public ResponseEntity<Pais> findById(@PathVariable UUID idPais) {
 		return super.ok(abstractService.findById(idPais));
 	}
 	
@@ -65,6 +65,6 @@ public class PaisController extends BaseController {
 	@Secured("Administrador")
 	@DeleteMapping("/{idPais}")
 	public ResponseEntity<Pais> delete(@PathVariable UUID idPais) {
-		return super.ok(abstractService.delete(idPais));
+		return super.ok(abstractService.deleteById(idPais));
 	}
 }

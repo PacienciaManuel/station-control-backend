@@ -51,8 +51,8 @@ public class FileSystemStorageService implements StorageService {
 	@Override
 	public Arquivo store(MultipartFile file) {
 		String originalFilename = file.getOriginalFilename();
+		if (originalFilename == null) throw new StorageException(messageSource.getMessage("storage.failed.unnamed-file", null, request.getLocale()));
 		if (file.isEmpty()) throw new StorageException(messageSource.getMessage("storage.failed.empty-file", new String[] {originalFilename}, request.getLocale()));
-		if (originalFilename == null) throw new StorageException(messageSource.getMessage("storage.failed.unnamed-file", new String[] {originalFilename}, request.getLocale()));
 		if (!originalFilename.contains(".")) throw new StorageException(messageSource.getMessage("storage.failed.without-extension", new String[] {originalFilename}, request.getLocale()));
 		try {
 			String url = new StringBuilder(UUID.randomUUID().toString())

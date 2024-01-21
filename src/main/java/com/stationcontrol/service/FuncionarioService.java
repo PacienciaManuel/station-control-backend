@@ -15,9 +15,8 @@ import com.stationcontrol.model.Telefone;
 
 public interface FuncionarioService extends AbstractService<Funcionario, UUID> {
 	public Funcionario findByEmail(String email) throws DataNotFoundException;
-	public Funcionario updateCountry(UUID idUsuario, UUID idPais);
 	public List<Funcionario> create(List<Funcionario> funcionarios);
-	public Funcionario update(UUID idFuncionario, Funcionario funcionario);
+	public Funcionario update(UUID idFuncionario, UUID idPais, Funcionario funcionario);
 	public Funcionario updateProfilePhoto(UUID idFuncionario, MultipartFile fotoPerfil);
 	public Funcionario updatePassword(UUID idFuncionario, SenhaDTO senhaDTO) throws UnauthorizedException;
 	public Funcionario updateEmail(UUID idUsuario, UpdateEmailDTO updateEmailDTO) throws UnauthorizedException;

@@ -83,8 +83,9 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 	}
 	
 	@Override
-	public Funcionario update(UUID idFuncionario, Funcionario funcionario) {
+	public Funcionario update(UUID idFuncionario, UUID idPais, Funcionario funcionario) {
 		var entity = this.findById(idFuncionario);
+		entity.setPais(paisService.findById(idPais));
 		entity.setNome(funcionario.getNome());
 		entity.setGenero(funcionario.getGenero());
 		entity.setDataNascimento(funcionario.getDataNascimento());
@@ -100,13 +101,6 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 			throw new UnauthorizedException(messageSource.getMessage("unauthorized", null, request.getLocale()));
 		}
 		entity.setEmail(updateEmailDTO.getEmail());
-		return super.save(entity);
-	}
-	
-	@Override
-	public Funcionario updateCountry(UUID idFuncionario, UUID idPais) {
-		var entity = this.findById(idFuncionario);
-		entity.setPais(paisService.findById(idPais));
 		return super.save(entity);
 	}
 	
@@ -130,8 +124,8 @@ public class FuncionarioServiceImpl extends AbstractServiceImpl<Funcionario, UUI
 	}
 	
 	@Override
-	public Funcionario delete(UUID id) {
-		Funcionario funcionario = super.delete(id);
+	public Funcionario deleteById(UUID id) {
+		Funcionario funcionario = super.deleteById(id);
 		storageService.delete(funcionario.getFotoPerfil());
 		return funcionario;	
 	}

@@ -12,5 +12,5 @@ public interface SuspeitoService extends AbstractService<Suspeito, UUID> {
 	public List<Suspeito> create(List<Suspeito> suspeitos);
 	public Suspeito updatePhoto(UUID idSuspeito, MultipartFile fotoPerfil);
 	public Suspeito update(UUID idSuspeito, UUID idPais, Suspeito suspeito);
-	public Suspeito create(UUID idPais, Suspeito suspeito, Optional<MultipartFile> fotoPerfil);
+	public Suspeito create(UUID idFuncionario, UUID idPais, Suspeito suspeito, Optional<MultipartFile> fotoPerfil);
 }

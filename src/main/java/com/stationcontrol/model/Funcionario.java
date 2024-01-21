@@ -1,11 +1,13 @@
 package com.stationcontrol.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.Length;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SourceType;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
@@ -38,7 +40,6 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -48,7 +49,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(Include.NON_NULL)
 @JsonClassDescription("funcionario")
-@EqualsAndHashCode(exclude = {"telefones", "pais"})
 @JsonRootName(value = "funcionario", namespace = "funcionarios")
 @Table(
 	name = "funcionarios",
@@ -59,7 +59,7 @@ import lombok.NoArgsConstructor;
 	},
 	uniqueConstraints = @UniqueConstraint(name = "uk_funcionarios_email", columnNames = "email")
 )
-@JsonPropertyOrder({"id", "nome", "genero", "dataNascimento", "email", "morada", "papel", "dataCriacao", "fotoPerfil", "pais", "telefones", "biografia"})
+@JsonPropertyOrder({"id", "nome", "genero", "dataNascimento", "email", "morada", "papel", "totalRequerentes", "totalSuspeitos", "totalOcorrencias", "totalSuspeitosOcorrencias", "dataCriacao", "fotoPerfil", "pais", "biografia"})
 public class Funcionario {
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -94,10 +94,22 @@ public class Funcionario {
 
 	@CreationTimestamp(source = SourceType.DB)
 	@Column(name = "data_criacao", nullable = false, updatable = false)
-	private String dataCriacao;
+	private LocalDateTime dataCriacao;
 
 	@Column(name = "foto_perfil")
 	private String fotoPerfil;
+	
+	@Formula("(SELECT COUNT(r.funcionario_id) FROM funcionarios f LEFT JOIN requerentes r ON (r.funcionario_id=f.id) WHERE f.id=id GROUP BY f.id)")
+	private Long totalRequerentes;
+	
+	@Formula("(SELECT COUNT(s.funcionario_id) FROM funcionarios f LEFT JOIN suspeitos s ON (s.funcionario_id=f.id) WHERE f.id=id GROUP BY f.id)")
+	private Long totalSuspeitos;
+	
+	@Formula("(SELECT COUNT(o.funcionario_id) FROM funcionarios f LEFT JOIN ocorrencias o ON (o.funcionario_id=f.id) WHERE f.id=id GROUP BY f.id)")
+	private Long totalOcorrencias;
+	
+	@Formula("(SELECT COUNT(so.funcionario_id) FROM funcionarios f LEFT JOIN suspeitos_ocorrencias so ON (so.funcionario_id=f.id) WHERE f.id=id GROUP BY f.id)")
+	private Long totalSuspeitosOcorrencias;
 	
 	@ManyToOne
 	@JoinColumn(name = "pais_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "fk_funcionarios_paises"))
@@ -110,11 +122,18 @@ public class Funcionario {
         joinColumns=@JoinColumn(name="funcionario_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_telefones_funcionarios_funcionario")),
         inverseJoinColumns=@JoinColumn(name="telefone_id", referencedColumnName="id", nullable = false, foreignKey = @ForeignKey(name = "fk_telefones_funcionarios_telefone"))
 	)
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	private List<Telefone> telefones;
 	
 	@JsonIgnore
 	@OneToMany(mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Ocorrencia> ocorrencias;
-
+	
+	@JsonIgnore
+	@OneToMany(mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Requerente> requerentes;
+	
+	@JsonIgnore
+	@OneToMany(mappedBy = "funcionario", orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Suspeito> suspeitos;
 }

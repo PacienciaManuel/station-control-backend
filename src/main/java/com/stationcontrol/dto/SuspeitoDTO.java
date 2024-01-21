@@ -6,6 +6,7 @@ import com.stationcontrol.model.Genero;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +28,11 @@ public class SuspeitoDTO {
 	@NotBlank(message = "{SuspeitoDTO.bilheteIdentidade.notblank}")
 	private String bilheteIdentidade;
 
+	private String morada;
+
 	@NotBlank(message = "{SuspeitoDTO.biografia.notblank}")
 	private String biografia;
+	
+	@Pattern(message = "{TelefoneDTO.numero.pattern}", regexp = "\\+244 \\d{9}")
+	private String numero;
 }

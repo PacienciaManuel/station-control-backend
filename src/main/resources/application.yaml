@@ -12,8 +12,8 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        format-sql: true
         show-sql: true
+        format-sql: true
   messages:
     always-use-message-format: false
     basename: locale/messages
